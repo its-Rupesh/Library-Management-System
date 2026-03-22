@@ -162,6 +162,10 @@ public:
     {
         status = "Assigned";
     }
+    void setCopyAsUnassigned()
+    {
+        this->status = "UnAssigned";
+    }
     int getCopy_id()
     {
         return copyId;
@@ -292,20 +296,38 @@ public:
         cout << "member_id:" << member_id << endl;
 
         tm issue_time = *localtime(&issue_date);
-        tm return_time = *localtime(&return_dueDate);
+        tm return_due_time = *localtime(&return_dueDate);
+        tm return_date_time = *localtime(&return_date);
 
-        cout << "issue_date:"
-             << issue_time.tm_mday << "/"
-             << (issue_time.tm_mon + 1)
-             << "/" << (issue_time.tm_year + 1900)
+        cout
+            << "issue_date:"
+            << issue_time.tm_mday << "/"
+            << (issue_time.tm_mon + 1)
+            << "/" << (issue_time.tm_year + 1900)
+            << endl;
+
+        cout << "return_due_date:" << (return_due_time.tm_mday) << "/"
+             << (return_due_time.tm_mon + 1) << "/"
+             << (return_due_time.tm_year + 1900)
              << endl;
 
-        cout << "return_due_date:" << (return_time.tm_mday) << "/"
-             << (return_time.tm_mon + 1) << "/"
-             << (return_time.tm_year + 1900)
+        cout << "return_date:" << (return_date_time.tm_mday) << "/"
+             << (return_date_time.tm_mon + 1) << "/"
+             << (return_date_time.tm_year + 1900)
              << endl;
 
         cout << "fine_amount:" << fine_amount << endl;
+    }
+
+    void setReturn_date(time_t return_date)
+    {
+        tm return_time = *localtime(&return_date);
+        this->return_date = return_date;
+    }
+
+    int getCopy_id()
+    {
+        return copy_id;
     }
 };
 
@@ -530,6 +552,54 @@ void displayIssueRecords(vector<issueRecords *> issueRecordsv)
         issueRecordsv[i]->displayIssueRecords();
     }
 }
+
+//(bookCopys, members, books, issueRecordsv)
+void return_Copy(vector<Copys *> bookCopys, vector<Members *> members, vector<Books *> books, vector<issueRecords *> issueRecordsv)
+{
+    int copy_id;
+    cout << "Enter Copy_id:";
+    cin >> copy_id;
+
+    int day;
+    int month;
+    int year;
+
+    time_t return_date;
+
+    cout << "Return Date:";
+    cin >> day;
+    cout << "Return Month:";
+    cin >> month;
+    cout << "Return Year:";
+    cin >> year;
+
+    tm t = {};
+    t.tm_mday = day;
+    t.tm_mon = month - 1;
+    t.tm_year = year - 1900;
+
+    return_date = mktime(&t);
+
+    for (int i = 0; i < bookCopys.size(); i++)
+    {
+        if (bookCopys[i]->getCopy_id() == copy_id)
+        {
+            bookCopys[i]->setCopyAsUnassigned();
+            break;
+        }
+    }
+
+    for (int i = 0; i < issueRecordsv.size(); i++)
+    {
+        if (issueRecordsv[i]->getCopy_id() == copy_id)
+        {
+            issueRecordsv[i]->setReturn_date(return_date);
+            break;
+        }
+    }
+    return;
+}
+
 int MenuDrive()
 
 {
@@ -605,7 +675,11 @@ int main()
             displayIssueRecords(issueRecordsv);
             break;
         }
-        
+        case 9:
+        {
+            return_Copy(bookCopys, members, books, issueRecordsv);
+            break;
+        }
         default:
             break;
         }
