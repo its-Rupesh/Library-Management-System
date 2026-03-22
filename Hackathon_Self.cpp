@@ -250,6 +250,65 @@ public:
     }
 };
 
+class issueRecords
+{
+private:
+    int issueRecordId;
+    int copy_id;
+    int member_id;
+    time_t issue_date;
+    time_t return_dueDate;
+    time_t return_date;
+    float fine_amount;
+
+public:
+    issueRecords()
+    {
+    }
+    issueRecords(int id, int copy_id, int member_id, time_t issue_date, time_t return_dueDate, float fine_amount)
+    {
+        this->issueRecordId = id;
+        this->copy_id = copy_id;
+        this->member_id = member_id;
+        this->issue_date = issue_date;
+        this->return_dueDate = return_dueDate;
+        this->fine_amount = fine_amount;
+    }
+    void acceptIssueRecords()
+    {
+        cout << "\nEnter the issue record id: ";
+        cin >> issueRecordId;
+        cout << "\nEnter the issue_date: ";
+        cin >> issue_date;
+        cout << "\nEnter the return due date: ";
+        cin >> return_dueDate;
+        cout << "\nEnter the fine_amount: ";
+        cin >> fine_amount;
+    }
+    void displayIssueRecords()
+    {
+        cout << "issueRecordId:" << issueRecordId << endl;
+        cout << "copy_id:" << copy_id << endl;
+        cout << "member_id:" << member_id << endl;
+
+        tm issue_time = *localtime(&issue_date);
+        tm return_time = *localtime(&return_dueDate);
+
+        cout << "issue_date:"
+             << issue_time.tm_mday << "/"
+             << (issue_time.tm_mon + 1)
+             << "/" << (issue_time.tm_year + 1900)
+             << endl;
+
+        cout << "return_due_date:" << (return_time.tm_mday) << "/"
+             << (return_time.tm_mon + 1) << "/"
+             << (return_time.tm_year + 1900)
+             << endl;
+
+        cout << "fine_amount:" << fine_amount << endl;
+    }
+};
+
 namespace booksFuncn
 {
     // Add Books
@@ -387,7 +446,7 @@ namespace CopyFuncn
 
 namespace AssignCopiesFuncn
 {
-    void assignCopyToMember(vector<Copys *> &bookCopys, vector<Members *> &members, vector<Books *> &books)
+    void assignCopyToMember(vector<Copys *> &bookCopys, vector<Members *> &members, vector<Books *> &books, vector<issueRecords *> &issueRecordsv)
     {
         cout << endl;
         int member_id;
@@ -429,11 +488,12 @@ namespace AssignCopiesFuncn
 
         bool book_assigned = 0;
 
-        for (int i = 0; i < bookCopys.size(); i++)
+        int j;
+        for (j = 0; j < bookCopys.size(); j++)
         {
-            if (bookCopys[i]->getId() == book_id && bookCopys[i]->isAvailable())
+            if (bookCopys[j]->getId() == book_id && bookCopys[j]->isAvailable())
             {
-                bookCopys[i]->setCopyasAssigned();
+                bookCopys[j]->setCopyasAssigned();
                 book_assigned = 1;
                 break;
             }
@@ -445,7 +505,29 @@ namespace AssignCopiesFuncn
         }
         cout << "Book Assigned!!!" << endl;
 
+        time_t now = time(0); // current date
+
+        tm temp = *localtime(&now); // convert to tm (copy)
+        temp.tm_mday += 7;          // add 7 days
+
+        time_t return_dueDate = mktime(&temp); // convert back
+
+        static int issueId = 1;
+
+        // int id, int copy_id, int member_id, time_t issue_date, time_t return_dueDate, float fine_amount
+        issueRecords *ptr_fun = new issueRecords(issueId, bookCopys[j]->getCopy_id(), member_id, now, return_dueDate, 0.0);
+
+        issueRecordsv.push_back(ptr_fun);
+
+        issueId++;
         return;
+    }
+}
+void displayIssueRecords(vector<issueRecords *> issueRecordsv)
+{
+    for (int i = 0; i < issueRecordsv.size(); i++)
+    {
+        issueRecordsv[i]->displayIssueRecords();
     }
 }
 int MenuDrive()
@@ -473,6 +555,7 @@ int main()
     vector<Books *> books;
     vector<Copys *> bookCopys;
     vector<Members *> members;
+    vector<issueRecords *> issueRecordsv;
 
     // vector<issueRecords *> issueRecordsv;
 
@@ -514,9 +597,15 @@ int main()
         }
         case 7:
         {
-            AssignCopiesFuncn::assignCopyToMember(bookCopys, members, books);
+            AssignCopiesFuncn::assignCopyToMember(bookCopys, members, books, issueRecordsv);
             break;
         }
+        case 8:
+        {
+            displayIssueRecords(issueRecordsv);
+            break;
+        }
+        
         default:
             break;
         }
